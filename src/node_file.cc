@@ -962,6 +962,12 @@ void AfterScanDir(uv_fs_t* req) {
 
   const bool with_file_types = req_wrap->with_file_types();
 
+  // req->result holds the number of directory entries returned by
+  // uv_fs_scandir(), which is an exact upper bound on how many items
+  // will be pushed into name_v/type_v below.
+  name_v.reserve(req->result);
+  if (with_file_types) type_v.reserve(req->result);
+
   for (;;) {
     uv_dirent_t ent;
 
@@ -2211,6 +2217,12 @@ static void ReadDir(const FunctionCallbackInfo<Value>& args) {
     int r;
     LocalVector<Value> name_v(isolate);
     LocalVector<Value> type_v(isolate);
+
+    // req.result holds the number of directory entries returned by
+    // uv_fs_scandir(), which is an exact upper bound on how many items
+    // will be pushed into name_v/type_v below.
+    name_v.reserve(req_wrap_sync.req.result);
+    if (with_types) type_v.reserve(req_wrap_sync.req.result);
 
     for (;;) {
       uv_dirent_t ent;
