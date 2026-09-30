@@ -1652,6 +1652,14 @@ PerProcessOptionsParser::PerProcessOptionsParser(
             "",  // It's a debug-only option.
             BOOL_FIELD(node_snapshot),
             kAllowedInEnvvar);
+  AddOption("--tty-reset-on-exit",
+            "restore the controlling terminal's mode to what it was when "
+            "this process started, when the process exits normally or via "
+            "SIGINT/SIGTERM. Disable this if another program managing the "
+            "same terminal (e.g. a pager) is expected to restore it instead",
+            BOOL_FIELD(tty_reset_on_exit),
+            kAllowedInEnvvar,
+            true);
   AddOption("--snapshot-blob",
             "Path to the snapshot blob that's either the result of snapshot"
             "building, or the blob that is used to restore the application "

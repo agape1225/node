@@ -424,6 +424,11 @@ class PerProcessOptions : public Options {
   // Therefore --node-snapshot is a per-process option.
   DEFINE_BOOL_FIELD(node_snapshot) = true;
 
+  // Read in ResetStdio(), which can run from a signal handler, so the parsed
+  // value is copied into a std::atomic<bool> once at startup rather than
+  // read from here directly at that point.
+  DEFINE_BOOL_FIELD(tty_reset_on_exit) = true;
+
   DEFINE_BOOL_FIELD(print_bash_completion) = false;
   DEFINE_BOOL_FIELD(print_help) = false;
   DEFINE_BOOL_FIELD(print_v8_help) = false;

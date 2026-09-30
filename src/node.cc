@@ -537,10 +537,18 @@ static_assert(
     std::is_same_v<std::underlying_type_t<ProcessInitializationFlags::Flags>,
                    uint32_t>);
 
+// Mirrors per_process::cli_options->tty_reset_on_exit. Copied into this
+// std::atomic<bool> once CLI options have been parsed (see
+// InitializeOncePerProcessInternal) because ResetStdio() can run from a
+// signal handler, where reading the options struct directly would not be
+// signal-safe.
+static std::atomic<bool> tty_reset_on_exit = true;
+
 static void PlatformInit(ProcessInitializationFlags::Flags flags) {
-  // init_process_flags is accessed in ResetStdio(),
+  // init_process_flags and tty_reset_on_exit are accessed in ResetStdio(),
   // which can be called from signal handlers.
   CHECK(init_process_flags.is_lock_free());
+  CHECK(tty_reset_on_exit.is_lock_free());
   init_process_flags.store(flags);
 
   if (!(flags & ProcessInitializationFlags::kNoStdioInitialization)) {
@@ -674,7 +682,9 @@ void ResetStdio() {
     return;
   }
 
-  uv_tty_reset_mode();
+  if (tty_reset_on_exit.load()) {
+    uv_tty_reset_mode();
+  }
 #ifdef __POSIX__
   for (auto& s : stdio) {
     const int fd = &s - stdio;
@@ -707,7 +717,7 @@ void ResetStdio() {
       CHECK_NE(err, -1);
     }
 
-    if (s.isatty) {
+    if (s.isatty && tty_reset_on_exit.load()) {
       sigset_t sa;
       int err;
 
@@ -1266,6 +1276,10 @@ InitializeOncePerProcessInternal(
       return result;
     }
   }
+
+  // CLI options are fully parsed at this point; mirror the value ResetStdio()
+  // needs into the signal-safe atomic declared alongside it.
+  tty_reset_on_exit.store(per_process::cli_options->tty_reset_on_exit);
 
   if (!(flags & ProcessInitializationFlags::kNoUseLargePages) &&
       (per_process::cli_options->use_largepages == "on")) {

@@ -1263,6 +1263,22 @@ See Loading ECMAScript modules using \fBrequire()\fR.
 Disable type-stripping for TypeScript files.
 For more information, see the TypeScript type-stripping documentation.
 .
+.It Fl -no-tty-reset-on-exit
+By default, when the process exits normally or is terminated by \fBSIGINT\fR or
+\fBSIGTERM\fR, Node.js restores the controlling terminal's mode to what it was
+when the process started. \fB--no-tty-reset-on-exit\fR disables this.
+This is useful when the process's output is piped to another program that
+manages the terminal itself (for example a pager like \fBless\fR): Node.js would
+otherwise restore whatever mode the terminal was in when Node.js started,
+which may already reflect changes made by that other program by the time
+Node.js exits, clobbering it.
+This only disables the blanket restore Node.js performs on exit from the
+terminal mode captured at startup. It does not disable the narrower restore
+that happens whenever a TTY stream whose mode was changed with
+\fBsetRawMode()\fR is closed (including during normal process shutdown), which
+puts that specific stream's terminal back the way it was before
+\fBsetRawMode()\fR was called.
+.
 .It Fl -no-warnings
 Silence all process warnings (including deprecations).
 .
@@ -2358,6 +2374,8 @@ one is included in the list below.
 \fB--no-network-family-autoselection\fR
 .It
 \fB--no-strip-types\fR
+.It
+\fB--no-tty-reset-on-exit\fR
 .It
 \fB--no-warnings\fR
 .It

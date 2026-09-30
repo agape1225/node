@@ -2481,6 +2481,31 @@ changes:
 Disable type-stripping for TypeScript files.
 For more information, see the [TypeScript type-stripping][] documentation.
 
+### `--no-tty-reset-on-exit`
+
+<!-- YAML
+added: REPLACEME
+-->
+
+> Stability: 1 - Experimental
+
+By default, when the process exits normally or is terminated by `SIGINT` or
+`SIGTERM`, Node.js restores the controlling terminal's mode to what it was
+when the process started. `--no-tty-reset-on-exit` disables this.
+
+This is useful when the process's output is piped to another program that
+manages the terminal itself (for example a pager like `less`): Node.js would
+otherwise restore whatever mode the terminal was in when Node.js started,
+which may already reflect changes made by that other program by the time
+Node.js exits, clobbering it.
+
+This only disables the blanket restore Node.js performs on exit from the
+terminal mode captured at startup. It does not disable the narrower restore
+that happens whenever a TTY stream whose mode was changed with
+`setRawMode()` is closed (including during normal process shutdown), which
+puts that specific stream's terminal back the way it was before
+`setRawMode()` was called.
+
 ### `--no-warnings`
 
 <!-- YAML
@@ -4329,6 +4354,7 @@ one is included in the list below.
 * `--no-global-search-paths`
 * `--no-network-family-autoselection`
 * `--no-strip-types`
+* `--no-tty-reset-on-exit`
 * `--no-warnings`
 * `--no-webstorage`
 * `--no-worker-snapshot`
